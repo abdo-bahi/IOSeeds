@@ -1,0 +1,148 @@
+{% extends "layouts/base.html" %} {% block title %} Charts {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+
+<link
+  rel="stylesheet"
+  href="/static/assets/plugins/chart-morris/css/morris.css"
+/>
+
+{% endblock stylesheets %} {% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    {% load static %}
+    <!-- <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}" /> -->
+    <link rel="stylesheet" href="{% static 'font-awesome.css' %}" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/evo-calendar@1.1.2/evo-calendar/css/evo-calendar.min.css"/>
+    <script src="{% static 'bootstrap.min.js' %}"></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://unpkg.com/gijgo@1.9.13/js/gijgo.min.js" type="text/javascript"></script>
+    <link href="https://unpkg.com/gijgo@1.9.13/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+</head>
+		<body>
+      
+			<div class="container">
+        <a  id="mobile-collapse" href="javascript:"><span ><img width="40px"  src="{% static 'images/menu.png' %}"></span></a>
+
+			  <center><h1>The IOSeeds Database </h1></center>
+			  <div class="row d-flex justify-content-center">
+				<div class="col-sm-4">
+					<input  id="datepicker" width="270" />
+				</div>
+				<div class="col-md-4">
+				  <input
+					value="Submit"
+					type="submit"
+					name="submit"
+					id="btn_show_chart1"
+					class="btn btn-primary"
+				  />
+				</div>
+				<br />
+      			<hr />
+				  {% autoescape off %}
+				  <div  class="row" id="graph">{{ graph|safe }}</div>
+				  
+			  </div>
+       
+  {% endautoescape %}
+			</div> 
+      <!-- <script src="static/bootstrap.bundle.min.js"></script> -->
+			<script>
+  // const graphDiv = document.getElementById('graph');
+  // // graphDiv.innerHTML = "<h1>.....Started! ......</h1>"
+	// document.getElementById('btn_show_chart1').addEventListener('click', function () {
+  // const date = document.getElementById('datepicker').value;
+
+  // // function updateCharts(chartData) {
+  // //     const layout = chartData.layout || {};  // Use provided layout or empty object
+  // //     Plotly.newPlot(graphDiv, chartData.traces, layout);
+  // // }
+
+  // // Make AJAX request on page load or button click (adjust trigger)
+  // const xhr = new XMLHttpRequest();
+  // xhr.open('GET', '/read/2024/05/03/1/', true);  // Replace with your URL
+  // xhr.onload = function () {
+  //     if (xhr.status === 200) {
+  //         // const data = JSON.parse(xhr.responseText);document.getElementById('graph').innerHTML = data.my_data;
+      
+  // }else {
+  //         console.error('Error:', xhr.statusText);  
+  //         document.getElementById('graph').innerHTML = "<h1>Error ......</h1>";
+  //         // Handle errors (e.g., display an error message)
+  //     }
+  //   }
+  // xhr.send();
+
+// const graphDiv = document.getElementById('graph');
+
+// function updateChart(chartData) {
+//     Plotly.newPlot(graphDiv, chartData.data, chartData.layout);
+// }
+
+// // Make AJAX request on page load or button click (adjust trigger)
+// const xhr = new XMLHttpRequest();
+// xhr.open('GET', '/read/2024/05/06/1/', true);  // Replace with your URL
+// xhr.onload = function () {
+//     if (xhr.status === 200) {
+//         const chartData = JSON.parse(xhr.responseText);
+//         updateChart(chartData);
+//     } else {
+//         console.error('Error:', xhr.statusText);
+//         // Handle errors (e.g., display an error message)
+//     }
+// };
+// xhr.send();
+  //  });
+  const mcuId = '{{ mcuId }}';
+  document.getElementById('btn_show_chart1').addEventListener('click', function () {
+            const date = document.getElementById('datepicker').value;
+            const graphDiv = document.getElementById('graph');
+
+            if (date) {
+                const [month,  day, year] = date.split('/');
+                const yearInt = parseInt(year, 10);
+                const  monthInt= parseInt(month, 10);
+                const dayInt = parseInt(day, 10);
+
+                if (!isNaN(yearInt) && !isNaN(monthInt) && !isNaN(dayInt)) {
+                    const url = `/read/${yearInt}/${monthInt}/${dayInt}/${mcuId}/`;
+                    window.location.href = url;
+                } else {
+                    console.error('Invalid date values');
+                    graphDiv.innerHTML = "<h1>Invalid date values</h1>";
+                }
+            } else {
+                alert('Please select a date.');
+            }
+        });
+$('#datepicker').datepicker({
+  uiLibrary: 'bootstrap'
+});
+
+
+    // $(document).ready(function() {
+    //     $('#datepicker').datepicker({ uiLibrary: 'bootstrap' });
+    // });
+
+			</script> 
+
+		  </body>
+</html>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<!-- <script src="../static/assets/plugins/chart-morris/js/raphael.min.js"></script>
+<script src="../static/assets/plugins/chart-morris/js/morris.min.js"></script>
+<script src="../static/assets/js/pages/chart-morris-custom.js"></script> -->
+
+{% endblock javascripts %}

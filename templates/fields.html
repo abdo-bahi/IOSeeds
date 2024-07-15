@@ -1,0 +1,252 @@
+{% extends "layouts/base.html" %} {% block title %}{% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<link rel="stylesheet" type="text/css" href="/static/evo-calendar.min.css"/>
+<div class="pcoded-content">
+  {% csrf_token %}
+  {% load static %}
+  <!-- {{ mcu|json_script:"mcu" }}
+<script>
+  const mcu = JSON.parse(document.getElementById('mcu').textContent);
+</script> -->
+  <div class="pcoded-inner-content">
+    <!-- [ breadcrumb ] start -->
+    <!-- [ breadcrumb ] end -->
+    <div class="main-body">
+      <div class="page-wrapper">
+        <!-- [ Main Content ] start -->       
+        <a  id="mobile-collapse" href="javascript:"><span ><img width="40px"  src="{% static 'images/menu.png' %}"></span></a>
+
+        {% if not mcuId %}
+                <h2 class="mb-4" style="color: gray;">Welcome, please login and setup your ESP !</h2><br/>
+              {%else%}
+              <h3>Irrigation fields : </h3>
+                {% endif %}
+        {%if error_message%}
+        error_message{% endif %}
+        <div class="row"> 
+            <br>
+            <ul id = "mcu_list"class="list-group">
+                
+                <!-- <li class="list-group-item active" style="width: 170%;">Name : <label></label> <br> ref : <label></label><br>
+                    <button class="btn btn-primary" id="SelectBtn" >Select</button>
+                    <button class="btn btn-danger" id="DeleteBtn " >Delete</button>
+                </li>
+                <li class="list-group-item " style="width: 170%;">Name : <label></label> <br> ref : <label></label><br>
+                    <button class="btn btn-primary" id="SelectBtn" >Select</button>
+                    <button class="btn btn-danger" id="DeleteBtn " >Delete</button>
+                </li> -->
+              </ul>
+        </div> 
+        <br>
+        <button id="addMcu"type="button" class="btn btn-outline-secondary">Add ESP</button>
+
+    </div>
+  </div>
+</div>
+{% endblock content %}
+{% block javascripts %}
+<script>
+        const mcuId = '{{ mcuId }}';
+        // const listItem = document.createElement('li');
+          
+        //     listItem.classList.add('list-group-item active');
+        
+        // listItem.innerHTML = `Name: ${mcu.name} <br> Ref: ${mcu.id} <br>
+        //   <button class="btn btn-primary ">Select</button>
+        //   <button class="btn btn-danger ">Delete</button>`;
+        //   mcuList.appendChild(listItem);
+       
+    const mcuList = document.getElementById('mcu_list');
+const selectBtn = document.getElementById('SelectBtn'); // Assuming there's only one "SelectBtn" (adjust if needed)
+const addMcuBtn = document.getElementById('addMcu');
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+console.log('from window onload');
+window.onload = function() {  // Run code on page load
+  if (mcuId) {
+  console.log('from window onload');
+    updateMcuList(mcuId);
+  }
+};
+// Function to send request and update list
+function updateMcuList(mcuId) {
+//     const xhr = new XMLHttpRequest();
+//   xhr.open('GET', `/get_related_mcus/${selectedMcuId}/`); // Use URL parameter for mcu_id
+//   xhr.onload = function() {
+//     if (xhr.status === 200) {
+//       const data = JSON.parse(xhr.responseText);
+    
+//       mcuList.innerHTML = ''; // Clear existing list items
+//       const relatedMcus = data.data;
+//       relatedMcus.forEach(mcu => {
+//         const listItem = document.createElement('li');
+//         if (mcuId == mcu.id) {
+//             listItem.classList.add('list-group-item active');
+//         }
+//         else{
+//             listItem.classList.add('list-group-item');
+//         }
+//         listItem.innerHTML = `Name: ${mcu.name} <br> Ref: ${mcu.id} <br>
+//           <button class="btn btn-primary select-btn">Select</button>
+//           <button class="btn btn-danger delete-btn" data-mcu-id="${mcu.id}">Delete</button>`;
+//         mcuList.appendChild(listItem);
+//       });
+//     }else {
+//       console.error('Error:', data.message);
+//     }
+    const xhr = new XMLHttpRequest();
+  xhr.open('GET', `/get_related_mcus/${mcuId}/`); // Use URL parameter for mcu_id
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      const data = JSON.parse(xhr.responseText);
+      if (data.status === 'success') {
+        console.log('from success sending onload',data);
+
+        mcuList.innerHTML = ''; // Clear existing list items
+        const relatedMcus = data.data;
+        relatedMcus.forEach(mcu => {
+          const listItem = document.createElement('li');
+          listItem.classList.add('list-group-item');
+          if (mcuId == mcu.id) {
+            listItem.classList.add('active');
+            listItem.innerHTML = `Name: ${mcu.name} <br> Ref: ${mcu.id} <br>`
+        }
+        else{
+          listItem.innerHTML = `Name: ${mcu.name} <br> Ref: ${mcu.id} <br>
+          <button  class="btn btn-primary select-btn" data-mcu-id="${mcu.id}">Select</button>
+          <button   class="btn btn-danger delete-btn"  data-mcu-id="${mcu.id}">Delete</button>`;
+        }
+        
+//           // must be here 
+//           selectBtn.addEventListener('click', () => {
+//   // Get the ID of the MCU item containing the button (adjust selector if needed)
+//   const selectedListItem = selectBtn.closest('.list-group-item');
+//   const selectedMcuId = selectedListItem.querySelector('label:nth-child(2)').textContent.trim(); // Assuming label for ref is the second child
+//   if (selectedMcuId) {
+//     console.log('from window btn select');
+
+//       window.location.href = `/fields/${selectedMcuId}/`;
+//   }
+// });
+         
+          mcuList.appendChild(listItem);
+          // const selectBtn = listItem.getElementById('selectbtn');
+          // const deleteBtn = listItem.getElementById('deletebtn');
+          
+          // selectBtn.addEventListener('click', function() {
+          //   console.log('Select button clicked for MCU ID:');
+          //   // Add your logic here for handling the select action
+          // });
+          
+          // deleteBtn.addEventListener('click', function() {
+          //   console.log('Delete button clicked for MCU ID:');
+          //   // Add your logic here for handling the delete action
+          // }); 
+         
+        });
+        
+      } else {
+        console.error('Error:', data.message);
+      }
+    } else {
+      console.error('Error:', xhr.statusText);
+    }
+  };
+  xhr.onerror = function() {
+    console.error('Network error');
+  };
+  xhr.send();
+}
+
+
+// Event listener for "SelectBtn" (assuming one button)
+// this must rerender with new mcuId
+// selectBtn.addEventListener('click', () => {
+//   // Get the ID of the MCU item containing the button (adjust selector if needed)
+//   const selectedListItem = selectBtn.closest('.list-group-item');
+//   const selectedMcuId = selectedListItem.querySelector('label:nth-child(2)').textContent.trim(); // Assuming label for ref is the second child
+//   if (selectedMcuId) {
+//     console.log('from window btn select');
+
+//       window.location.href = `/fields/${selectedMcuId}/`;
+//   }
+// });
+
+// Event listener for "addMcu" button (assuming it opens a modal or performs some action to add a new MCU)
+addMcuBtn.addEventListener('click', () => {
+  // Handle adding a new MCU (logic for opening a modal or performing the action)
+  console.log('click addmcu');
+  // window.location.href = `/add_new_mcu/${mcuId}/`;
+  const request = new XMLHttpRequest();
+    request.open('POST', `/add_new_mcu/${mcuId}/`);
+    request.setRequestHeader('X-CSRFToken', csrftoken);
+    request.onload = function () {
+      if (request.status === 200) {
+        console.log('Success:', request.responseText);
+        alert('esp added!');
+        window.location.href = `/fields.html/${mcuId}/`;
+      } else {
+        console.error('Error:', request.statusText);
+      }
+    };
+    request.onerror = function () {
+      console.error('Network error');
+    };
+    request.send();
+
+});
+
+// // Event listener for "DeleteBtn" buttons (assuming multiple buttons)
+mcuList.addEventListener('click', (event) => {
+  if (event.target.classList.contains('delete-btn')) {
+    const deleteBtn = event.target;
+    const mcuIdToDelete = deleteBtn.dataset.mcuId;
+    // Implement logic to confirm deletion and send a DELETE request to Django for the specific MCU ID
+    console.log('Delete clicked for MCU:', mcuIdToDelete);
+    var result = confirm('Delete MCU of Ref : ', mcuIdToDelete);
+    if (result) {
+
+    const request = new XMLHttpRequest();
+
+    request.open('DELETE', `/api/mcu/${mcuIdToDelete}/`);
+    // request.setRequestHeader('Content-Type', 'application/json');
+    request.setRequestHeader('X-CSRFToken', csrftoken);
+    request.onload = function () {
+if (request.status === 204) {
+  console.log('Success:', request.responseText);
+  alert('Mcu deleted !');
+  window.location.href = `/fields.html/${mcuId}/`;
+} else {
+  console.error('Error:', request.statusText);
+}
+};
+
+request.onerror = function () {
+console.error('Network error:', request.statusText);
+};
+
+    request.send();
+      
+} else {
+      alert('delete canceled');
+    }
+  }
+});
+mcuList.addEventListener('click', (event) => {
+  if (event.target.classList.contains('select-btn')) {
+    const selectBtn = event.target;
+    const mcuIdToSelect = selectBtn.dataset.mcuId;
+    // Implement logic to confirm deletion and send a DELETE request to Django for the specific MCU ID
+    if (mcuIdToSelect) {
+    console.log('from window btn select');
+
+      window.location.href = `/fields.html/${mcuIdToSelect}/`;
+  }
+  }
+});
+
+// Initial fetch to populate the list (optional)
+// You can call updateMcuList() with a default MCU ID (if applicable) on page load to populate the list initially
+</script>
+{% endblock javascripts %}

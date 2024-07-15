@@ -1,0 +1,172 @@
+{% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<div class="pcoded-content">
+  <div class="pcoded-inner-content">
+    <!-- [ breadcrumb ] start -->
+    <!-- [ breadcrumb ] end -->
+    {% load static %}
+      {% csrf_token %}
+      <a  id="mobile-collapse" href="javascript:"><span ><img width="40px"  src="{% static 'images/menu.png' %}"></span></a>
+      <h2 class="f-w-300 d-flex align-items-center m-b-0" id="mcuId">
+      <!-- {{result.pH.Data}} -->Microcontroller reference : {{mcuId}}
+      </h2>
+      <h4 class="mb-4">Add this to "mcuID" field in your esp firmware</h4>
+      <br />
+      <br />
+      <h3 class="f-w-300 d-flex align-items-center m-b-0" id="mcuId">
+        <!-- {{result.pH.Data}} -->Microcontroller Configurations :
+      </h3>
+      <br />
+      <div>
+        <label for="sleepingTime" id="lsleepingTime" class="form-control">Getting Sensors data every 30 seconds </label
+        ><br />
+      </div>
+      <div>
+        <input id="sleepingTime" type="text" name="sleepingTime" class="form-control" />
+      </div>
+      <br />
+
+      <div>
+        <label for="name" id="lname" class="form-control">Name of your esp is  esp</label
+        ><br />
+      </div>
+      <div>
+        <input id="name" type="text" name="name" class="form-control" />
+      </div>
+      <br />
+
+      <div>
+        <label for="irrigationTime" id="lirrigationTime" class="form-control">Irrigation maximum time is 30 seconds </label
+        ><br />
+      </div>
+      <div>
+        <input id="irrigationTime" type="text" name="irrigationTime" class="form-control" />
+      </div>
+      <br />
+
+      <div>
+        <label for="threshold" id="lthreshold" class="form-control">Your threshold Value is 30 %</label
+        ><br />
+      </div>
+      <div>
+        <input id="threshold" type="text" name="threshold" class="form-control" />
+      </div>
+      <br />
+
+      <button class="btn btn-primary" id="irrigationBtn">
+        Update Values
+      </button>
+    
+  </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  var sleepingTimeText = `Getting Sensors data every 5 seconds`;
+  var irrigationTimeText = `Irrigation maximum time is 10 seconds `;
+  var thresholdText = `Your threshold Value is 30 %`;
+  var nameText = `Your esp name is : esp `;
+  var alertIrrigation = `Are you sure you want to set for 10 seconds or till 30% Moisture and get data every 5 seconds`
+  const mcuId = '{{ mcuId }}';
+      const SSE_URL = `/sensor-data-stream/${mcuId}/`;
+      let eventSource;
+const sleepingTimeElement = document.getElementById('lsleepingTime');
+const irrigationTimeElement = document.getElementById('lirrigationTime');
+const thresholdElement = document.getElementById('lthreshold');
+const nameElement = document.getElementById('lname');
+
+const updateBtn = document.getElementById('irrigationBtn');
+
+// const url = `/api/mcu/${mcuId}/`;  // Adjust URL based on your API endpoint
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+const url = `/api/mcu/${mcuId}/`;  // Adjust URL based on your API endpoint
+
+function updateData(data) {
+  sleepingTimeElement.textContent = (data.sleepingTime != undefined)? `Getting Sensors data every ${data.sleepingTime} seconds` : sleepingTimeText;
+
+  irrigationTimeElement.textContent = (data.irrigationTime != undefined)? `Irrigation maximum time is ${data.irrigationTime} seconds ` : irrigationTimeText;
+
+  thresholdElement.textContent = (data.threshold != undefined)? `Your threshold Value is ${data.threshold} %` : thresholdText;
+
+  nameElement.textContent = (data.name != undefined)? `Your esp name is ${data.name}` : nameText;
+  alertIrrigation = (data.soilMoisture == undefined)?`Are you sure you want to set next irrigations param for 30 seconds or till 30% Moisture` : 
+  `Are you sure you want to set next irrigations param for ${data.irrigationTime} seconds or till ${data.threshold} % Moisture and get data every ${data.sleepingTime} seconds`  ;
+}
+window.onload = function() {  // Run code on page load
+eventSource = new EventSource(SSE_URL);
+eventSource.onmessage = event => {
+  const data = JSON.parse(event.data);
+  // console.log('data : ',data);
+  updateData(data);
+};
+eventSource.onerror = function(error) {
+  console.error("Error:", error);
+};
+};
+
+updateBtn.addEventListener('click', () => {
+  
+    var result = confirm(alertIrrigation);
+    if (result) {
+      var sleepingTime = parseInt(document.getElementById("sleepingTime").value);
+      var irrigationTime = parseInt(document.getElementById("irrigationTime").value);
+      var threshold = parseInt(document.getElementById("threshold").value);
+      var name = document.getElementById("name").value;
+
+      document.getElementById("sleepingTime").value = '';
+      document.getElementById("irrigationTime").value = '';
+      document.getElementById("threshold").value = '';
+      document.getElementById("name").value = '';
+      // check + prepare  
+      let dataToSend = {};
+      if (name.length != 0) {
+        dataToSend.name = name;
+      }
+      if (sleepingTime && (sleepingTime > 0)) {
+        dataToSend.sleepingTime = sleepingTime;
+      }
+      if (irrigationTime && (irrigationTime > 0)) {
+        dataToSend.irrigationTime = irrigationTime;
+      }
+      if (threshold && (threshold >= 0) && (threshold <= 100)) {
+        dataToSend.threshold = threshold;
+      }
+      
+
+    const request = new XMLHttpRequest();
+
+    request.open('PUT', url);
+    request.setRequestHeader('Content-Type', 'application/json');
+    request.setRequestHeader('X-CSRFToken', csrftoken);
+    if (Object.keys(dataToSend).length === 0) {
+    return; // Early exit if no data to send
+    }
+    const data = JSON.stringify(dataToSend);
+    console.log('datatosand : ', data);
+    request.onload = function () {
+if (request.status === 200) {
+  console.log('Success:', request.responseText);
+  alert('Data updated !');
+} else {
+  console.error('Error:', request.statusText);
+}
+};
+
+request.onerror = function () {
+console.error('Network error:', request.statusText);
+};
+
+    request.send(data);
+      
+} else {
+      alert('update canceled')
+    }
+});
+</script>
+{% endblock javascripts %}
